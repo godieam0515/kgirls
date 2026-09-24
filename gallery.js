@@ -1,0 +1,14 @@
+'use strict';
+const photos = Array.isArray(window.GALLERY_PHOTOS) ? window.GALLERY_PHOTOS : [];
+const grid=document.querySelector('#gallery'), dialog=document.querySelector('#lightbox'), big=document.querySelector('#large-photo');
+let selected=0,opener=null;
+function show(index){selected=(index+photos.length)%photos.length;const p=photos[selected];document.querySelector('#photo-title').textContent=p.title;document.querySelector('#image-error').textContent='';big.alt=p.title;big.src=p.src;document.querySelector('#position').textContent=`${selected+1} / ${photos.length}`;}
+function openPhoto(index,button){opener=button;show(index);dialog.showModal();document.body.style.overflow='hidden';}
+function change(delta){if(photos.length)show(selected+delta);}
+big.addEventListener('error',()=>{document.querySelector('#image-error').textContent='사진을 불러오지 못했습니다. 잠시 후 다시 열어주세요.';});
+document.querySelector('#count').textContent=String(photos.length).padStart(2,'0');
+const empty=document.querySelector('#empty');empty.hidden=photos.length>0;empty.style.display=photos.length?'none':'flex';
+if(!Array.isArray(window.GALLERY_PHOTOS)){empty.style.display='none';document.querySelector('#status').textContent='사진 목록을 불러오지 못했습니다. 페이지를 새로고침해 주세요.';}
+photos.forEach((p,i)=>{const card=document.createElement('button');card.className='photo-card';const wrap=document.createElement('div');wrap.className='photo-wrap';const img=document.createElement('img');img.src=p.src;img.alt=p.title;img.loading='lazy';img.decoding='async';const view=document.createElement('span');view.className='view';view.textContent='크게 보기 ↗';wrap.append(img,view);const caption=document.createElement('span');caption.className='caption';const title=document.createElement('span');title.textContent=p.title;const num=document.createElement('span');num.className='index';num.textContent=String(i+1).padStart(2,'0');caption.append(title,num);card.append(wrap,caption);card.addEventListener('click',()=>openPhoto(i,card));grid.append(card);});
+document.querySelector('.close').addEventListener('click',()=>dialog.close());dialog.addEventListener('close',()=>{document.body.style.overflow='';opener?.focus();});dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}});dialog.addEventListener('keydown',e=>{if(e.key==='ArrowRight'){e.preventDefault();change(1);}if(e.key==='ArrowLeft'){e.preventDefault();change(-1);}});document.querySelector('#prev').addEventListener('click',()=>change(-1));document.querySelector('#next').addEventListener('click',()=>change(1));
+if(/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/tree\/main\/photos$/.test(window.GALLERY_MANAGE_URL||'')){const a=document.querySelector('#manage');a.href=window.GALLERY_MANAGE_URL;a.hidden=false;}
